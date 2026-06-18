@@ -449,8 +449,10 @@ static int ipu7_psys_open(struct inode *inode, struct file *file)
 	mutex_lock(&psys->mutex);
 
 	ret = ipu7_psys_get_graph_id(fh);
-	if (ret < 0)
+	if (ret < 0) {
+		dev_err(dev, "ipu7_psys_open: get_graph_id failed %d (all slots used?)\n", ret);
 		goto open_failed;
+	}
 
 	fh->ip->graph_id = ret;
 
@@ -1310,7 +1312,7 @@ static int ipu7_psys_init_debugfs(struct ipu7_psys *psys)
 	struct dentry *file;
 	struct dentry *dir;
 
-	dir = debugfs_create_dir("psys", psys->adev->isp->ipu7_dir);
+	dir = debugfs_create_dir("psys", NULL); /* parent ipu7_dir absent in kernel 7.0.x */
 	if (IS_ERR(dir))
 		return -ENOMEM;
 
@@ -1342,8 +1344,10 @@ static int ipu7_psys_probe(struct auxiliary_device *auxdev,
 	unsigned int i;
 	int ret;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(7, 0, 0)
 	if (!adev->isp->ipu7_bus_ready_to_probe)
 		return -EPROBE_DEFER;
+#endif
 
 	ret = alloc_chrdev_region(&ipu7_psys_dev_t, 0,
 				  IPU_PSYS_NUM_DEVICES, IPU_PSYS_NAME);
@@ -1457,10 +1461,7 @@ static void ipu7_psys_remove(struct auxiliary_device *auxdev)
 	struct ipu7_psys *psys = dev_get_drvdata(&auxdev->dev);
 	struct device *dev = &auxdev->dev;
 #ifdef CONFIG_DEBUG_FS
-	struct ipu7_device *isp = psys->adev->isp;
-
-	if (isp->ipu7_dir)
-		debugfs_remove_recursive(psys->debugfsdir);
+	debugfs_remove_recursive(psys->debugfsdir);
 #endif
 
 	mutex_lock(&ipu7_psys_mutex);
