@@ -1,4 +1,4 @@
-From a32ce6c2c845555cac99a923f4fac515f8d88805 Mon Sep 17 00:00:00 2001
+From 7795ec9aa909e1f8ecec9a5db0db0421785d6036 Mon Sep 17 00:00:00 2001
 From: linya14x <linx.yang@intel.com>
 Date: Mon, 20 Oct 2025 12:36:12 +0800
 Subject: [PATCH 05/23] patch: staging add enable CONFIG_DEBUG_FS
@@ -12,7 +12,7 @@ Signed-off-by: linya14x <linx.yang@intel.com>
  4 files changed, 154 insertions(+)
 
 diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
-index b59cf28a9f17..1da071fa5241 100644
+index 2e9fc608d9bc..78d1c562d88d 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys.c
 +++ b/drivers/staging/media/ipu7/ipu7-isys.c
 @@ -9,6 +9,9 @@
@@ -25,9 +25,9 @@ index b59cf28a9f17..1da071fa5241 100644
  #include <linux/delay.h>
  #include <linux/device.h>
  #include <linux/dma-mapping.h>
-@@ -621,6 +624,10 @@ static void isys_remove(struct auxiliary_device *auxdev)
- 	struct isys_fw_msgs *fwmsg, *safe;
- 	struct ipu7_bus_device *adev = auxdev_to_adev(auxdev);
+@@ -642,6 +645,10 @@ static void isys_remove(struct auxiliary_device *auxdev)
+
+ 	adev->get_running_fw_task_count = NULL;
 
 +#ifdef CONFIG_DEBUG_FS
 +	if (adev->isp->ipu7_dir)
@@ -36,8 +36,8 @@ index b59cf28a9f17..1da071fa5241 100644
  	for (int i = 0; i < IPU_ISYS_MAX_STREAMS; i++)
  		mutex_destroy(&isys->streams[i].mutex);
 
-@@ -645,6 +652,78 @@ static void isys_remove(struct auxiliary_device *auxdev)
- 	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
+@@ -665,6 +672,78 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ #endif
  }
 
 +#ifdef CONFIG_DEBUG_FS
@@ -115,7 +115,7 @@ index b59cf28a9f17..1da071fa5241 100644
  static int alloc_fw_msg_bufs(struct ipu7_isys *isys, int amount)
  {
  	struct ipu7_bus_device *adev = isys->adev;
-@@ -823,6 +902,11 @@ static int isys_probe(struct auxiliary_device *auxdev,
+@@ -861,6 +940,11 @@ static int isys_probe(struct auxiliary_device *auxdev,
 
  	isys_stream_init(isys);
 
@@ -128,7 +128,7 @@ index b59cf28a9f17..1da071fa5241 100644
  	ret = alloc_fw_msg_bufs(isys, 20);
  	if (ret < 0)
 diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
-index 18f54c17d4b7..a2a7d75696c5 100644
+index 48d207f0952f..60520834fdc6 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys.h
 +++ b/drivers/staging/media/ipu7/ipu7-isys.h
 @@ -25,6 +25,10 @@

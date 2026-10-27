@@ -1,4 +1,4 @@
-From 3dbefe49f48fddc9d8945d87a5f89d87170be810 Mon Sep 17 00:00:00 2001
+From f2f7b903f896af3dc37ad8ff49ef41d5ccc99cd6 Mon Sep 17 00:00:00 2001
 From: linya14x <linx.yang@intel.com>
 Date: Fri, 30 Jan 2026 12:16:30 +0800
 Subject: [PATCH 06/23] patch: staging add enable CONFIG_INTEL_IPU_ACPI
@@ -12,7 +12,7 @@ Signed-off-by: linya14x <linx.yang@intel.com>
  4 files changed, 258 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/staging/media/ipu7/ipu7-isys.c b/drivers/staging/media/ipu7/ipu7-isys.c
-index 1da071fa5241..71cd9a779e83 100644
+index 43e764b9120b..5320330f7987 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys.c
 +++ b/drivers/staging/media/ipu7/ipu7-isys.c
 @@ -96,6 +96,126 @@ isys_complete_ext_device_registration(struct ipu7_isys *isys,
@@ -158,7 +158,7 @@ index 1da071fa5241..71cd9a779e83 100644
 
  static void isys_unregister_video_devices(struct ipu7_isys *isys)
  {
-@@ -410,6 +532,7 @@ static void isys_v4l2_notify(struct v4l2_subdev *sd, unsigned int notification,
+@@ -429,6 +551,7 @@ static void isys_v4l2_notify(struct v4l2_subdev *sd, unsigned int notification,
  }
  #endif
 
@@ -166,7 +166,7 @@ index 1da071fa5241..71cd9a779e83 100644
  static int isys_register_devices(struct ipu7_isys *isys)
  {
  	struct device *dev = &isys->adev->auxdev.dev;
-@@ -448,7 +571,74 @@ static int isys_register_devices(struct ipu7_isys *isys)
+@@ -467,7 +590,74 @@ static int isys_register_devices(struct ipu7_isys *isys)
  	if (ret)
  		goto out_csi2_unregister_subdevices;
 
@@ -242,7 +242,7 @@ index 1da071fa5241..71cd9a779e83 100644
  	if (ret)
  		goto out_csi2_unregister_subdevices;
 
-@@ -471,6 +661,7 @@ static int isys_register_devices(struct ipu7_isys *isys)
+@@ -490,6 +680,7 @@ static int isys_register_devices(struct ipu7_isys *isys)
 
  	return ret;
  }
@@ -250,7 +250,7 @@ index 1da071fa5241..71cd9a779e83 100644
 
  static void isys_unregister_devices(struct ipu7_isys *isys)
  {
-@@ -618,6 +809,7 @@ static const struct dev_pm_ops isys_pm_ops = {
+@@ -637,6 +828,7 @@ static const struct dev_pm_ops isys_pm_ops = {
  	.resume = isys_resume,
  };
 
@@ -258,7 +258,7 @@ index 1da071fa5241..71cd9a779e83 100644
  static void isys_remove(struct auxiliary_device *auxdev)
  {
  	struct ipu7_isys *isys = dev_get_drvdata(&auxdev->dev);
-@@ -639,7 +831,9 @@ static void isys_remove(struct auxiliary_device *auxdev)
+@@ -658,7 +850,9 @@ static void isys_remove(struct auxiliary_device *auxdev)
  		ipu7_dma_free(adev, sizeof(struct isys_fw_msgs),
  			      fwmsg, fwmsg->dma_addr, 0);
 
@@ -269,9 +269,9 @@ index 1da071fa5241..71cd9a779e83 100644
  	isys_unregister_devices(isys);
 
  	cpu_latency_qos_remove_request(&isys->pm_qos);
-@@ -651,6 +845,40 @@ static void isys_remove(struct auxiliary_device *auxdev)
+@@ -669,6 +863,40 @@ static void isys_remove(struct auxiliary_device *auxdev)
+ 	mutex_destroy(&isys->reset_mutex);
  #endif
- 	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
  }
 +#else
 +static void isys_remove(struct auxiliary_device *auxdev)
@@ -299,22 +299,22 @@ index 1da071fa5241..71cd9a779e83 100644
 +
 +	cpu_latency_qos_remove_request(&isys->pm_qos);
 +
++	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
 +	mutex_destroy(&isys->stream_mutex);
 +	mutex_destroy(&isys->mutex);
 +#ifdef CONFIG_VIDEO_INTEL_IPU7_ISYS_RESET
 +	mutex_destroy(&isys->reset_mutex);
 +#endif
-+	mutex_destroy(&isys->acquire_fw_msgbuf_lock);
 +}
 +#endif
 
  #ifdef CONFIG_DEBUG_FS
  static ssize_t fwlog_read(struct file *file, char __user *userbuf, size_t size,
 diff --git a/drivers/staging/media/ipu7/ipu7-isys.h b/drivers/staging/media/ipu7/ipu7-isys.h
-index a2a7d75696c5..7351fa82888f 100644
+index 60520834fdc6..af18182229d7 100644
 --- a/drivers/staging/media/ipu7/ipu7-isys.h
 +++ b/drivers/staging/media/ipu7/ipu7-isys.h
-@@ -153,6 +153,21 @@ struct ipu7_isys_csi2_config {
+@@ -151,6 +151,21 @@ struct ipu7_isys_csi2_config {
  	enum v4l2_mbus_type bus_type;
  };
 
